@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wordle</title>
+    <!-- Added Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #ffffff;
+            margin: 0;
+            padding: 20px;
+        }
+        .header {
+            font-family: 'Inter', sans-serif;
+            font-weight: 700;
+            font-size: 2em;
+            margin-bottom: 20px;
+        }
+        /* Rest of the styles remain the same */
+        .game-board {
+            display: grid;
+            grid-gap: 5px;
+            padding: 10px;
+        }
+        .row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr) 0fr repeat(5, 1fr);
+            grid-gap: 5px;
+        }
+        .tile {
+            width: 40px;
+            height: 40px;
+            border: 2px solid #d3d6da;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5em;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .space-tile {
+            width: 20px;
+            height: 40px;
+            border: none;
+            background: none;
+        }
+        .keyboard {
+            margin-top: 30px;
+        }
+        .keyboard-row {
+            display: flex;
+            justify-content: center;
+            margin: 5px;
+        }
+        .key {
+            margin: 2px;
+            padding: 15px;
+            border: none;
+            border-radius: 4px;
+            background-color: #d3d6da;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .correct {
+            background-color: #6aaa64;
+            color: white;
+            border-color: #6aaa64;
+        }
+        .present {
+            background-color: #c9b458;
+            color: white;
+            border-color: #c9b458;
+        }
+        .absent {
+            background-color: #787c7e;
+            color: white;
+            border-color: #787c7e;
+        }
+    </style>
+</head>
+<body>
+    <!-- Rest of the HTML and JavaScript code remains exactly the same -->
+    <div class="header">WORDLE</div>
+    <div class="game-board" id="board"></div>
+    <div class="keyboard" id="keyboard"></div>
+
+    <script>
+        const WORD = "HEY CUTIE";
+        const MAX_ATTEMPTS = 6;
+        let currentAttempt = 0;
+        let currentTile = 0;
+        let gameOver = false;
+
+        function initializeBoard() {
+            const board = document.getElementById('board');
+            for (let i = 0; i < MAX_ATTEMPTS; i++) {
+                const row = document.createElement('div');
+                row.className = 'row';
+                for (let j = 0; j < WORD.length; j++) {
+                    const tile = document.createElement('div');
+                    if (j === 3) {
+                        tile.className = 'space-tile';
+                    } else {
+                        tile.className = 'tile';
+                    }
+                    row.appendChild(tile);
+                }
+                board.appendChild(row);
+            }
+        }
+
+        function initializeKeyboard() {
+            const keyboard = document.getElementById('keyboard');
+            const rows = [
+                'QWERTYUIOP',
+                'ASDFGHJKL',
+                'ZXCVBNM'
+            ];
+
+            rows.forEach(row => {
+                const keyboardRow = document.createElement('div');
+                keyboardRow.className = 'keyboard-row';
+                
+                if (row === 'ZXCVBNM') {
+                    // Add Enter key
+                    const enterKey = createKey('ENTER');
+                    keyboardRow.appendChild(enterKey);
+                }
+
+                row.split('').forEach(letter => {
+                    const key = createKey(letter);
+                    keyboardRow.appendChild(key);
+                });
+
+                if (row === 'ZXCVBNM') {
+                    // Add Backspace key
+                    const backspaceKey = createKey('←');
+                    keyboardRow.appendChild(backspaceKey);
+                }
+
+                keyboard.appendChild(keyboardRow);
+            });
+        }
+
+        function createKey(letter) {
+            const key = document.createElement('button');
+            key.className = 'key';
+            key.textContent = letter;
+            key.addEventListener('click', () => handleKeyPress(letter));
+            return key;
+        }
+
+        function handleKeyPress(key) {
+            if (gameOver) return;
+
+            if (key === 'ENTER') {
+                checkGuess();
+            } else if (key === '←') {
+                deleteLetter();
+            } else {
+                addLetter(key);
+            }
+        }
+
+        function addLetter(letter) {
+            if (currentTile < WORD.length && currentAttempt < MAX_ATTEMPTS) {
+                if (currentTile === 3) {
+                    currentTile++; // Skip the space position
+                }
+                const row = document.getElementsByClassName('row')[currentAttempt];
+                const tile = row.children[currentTile];
+                if (!tile.classList.contains('space-tile')) {
+                    tile.textContent = letter;
+                    currentTile++;
+                }
+            }
+        }
+
+        function deleteLetter() {
+            if (currentTile > 0) {
+                currentTile--;
+                if (currentTile === 3) {
+                    currentTile--; // Skip the space position
+                }
+                const row = document.getElementsByClassName('row')[currentAttempt];
+                const tile = row.children[currentTile];
+                if (!tile.classList.contains('space-tile')) {
+                    tile.textContent = '';
+                }
+            }
+        }
+
+        function checkGuess() {
+            if (currentTile !== WORD.length) return;
+
+            const row = document.getElementsByClassName('row')[currentAttempt];
+            let guess = '';
+            for (let i = 0; i < WORD.length; i++) {
+                if (i === 3) {
+                    guess += ' ';
+                } else {
+                    guess += row.children[i].textContent;
+                }
+            }
+
+            colorTiles(guess, row);
+
+            if (guess === WORD) {
+                gameOver = true;
+                setTimeout(() => {
+                    window.location.href = 'valentine-proposal.html';
+                }, 1500);
+            } else {
+                currentAttempt++;
+                currentTile = 0;
+                if (currentAttempt >= MAX_ATTEMPTS) {
+                    gameOver = true;
+                }
+            }
+        }
+
+        function colorTiles(guess, row) {
+            const tiles = row.children;
+            for (let i = 0; i < WORD.length; i++) {
+                if (i !== 3) {
+                    if (guess[i] === WORD[i]) {
+                        tiles[i].classList.add('correct');
+                    } else if (WORD.includes(guess[i])) {
+                        tiles[i].classList.add('present');
+                    } else {
+                        tiles[i].classList.add('absent');
+                    }
+                }
+            }
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                handleKeyPress('ENTER');
+            } else if (e.key === 'Backspace') {
+                handleKeyPress('←');
+            } else if (/^[a-zA-Z]$/.test(e.key)) {
+                handleKeyPress(e.key.toUpperCase());
+            }
+        });
+
+        initializeBoard();
+        initializeKeyboard();
+    </script>
+</body>
+</html>
